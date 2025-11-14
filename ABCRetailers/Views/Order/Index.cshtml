@@ -1,0 +1,221 @@
+﻿<!-- Views/Order/Index.cshtml -->
+@model IEnumerable<ABCRetailers.Models.Order>
+@{
+    ViewData["Title"] = "Orders";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-shopping-cart"></i> Orders</h2>
+    <div>
+        <button type="button" class="btn btn-info me-2" onclick="debugOrders()">
+            <i class="fas fa-bug"></i> Debug Orders
+        </button>
+        <form asp-action="FixOrderPrices" method="post" style="display: inline;">
+            <button type="submit" class="btn btn-warning me-2" onclick="return confirm('This will recalculate total prices for all orders. Continue?')">
+                <i class="fas fa-tools"></i> Fix Order Prices
+            </button>
+        </form>
+        <form asp-action="ForceRecalculateAll" method="post" style="display: inline;">
+            <button type="submit" class="btn btn-danger me-2" onclick="return confirm('This will FORCE recalculate ALL orders with current product prices. Continue?')">
+                <i class="fas fa-exclamation-triangle"></i> Force Recalculate All
+            </button>
+        </form>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Order
+        </a>
+    </div>
+</div>
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Order ID</th>
+                    <th>Username</th>
+                    <th>Product</th>
+                    <th>Order Date</th>
+                    <th>Quantity</th>
+                    <th>Total Price</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model.OrderByDescending(o => o.OrderDate))
+                {
+                    <tr>
+                        <td><code>@order.OrderId.Substring(0, 8)...</code></td>
+                        <td>@order.Username</td>
+                        <td>@order.ProductName</td>
+                        <td>@order.OrderDate.ToString("MMM dd, yyyy")</td>
+                        <td>@order.Quantity</td>
+                        <td>@order.TotalPrice.ToString("C")</td>
+                        <td>
+                            <span class="badge bg-@(GetStatusBadgeClass(order.Status))">
+                                @order.Status
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-info" title="Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                <!-- Status Update Dropdown -->
+                                @if (order.Status != "Completed" && order.Status != "Cancelled")
+                                {
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-warning dropdown-toggle" data-bs-toggle="dropdown" title="Update Status">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            @if (order.Status == "Submitted")
+                                            {
+                                                <li>
+                                                    <a class="dropdown-item" href="#" onclick="updateOrderStatus('@order.OrderId', 'Processing')">
+                                                        <i class="fas fa-cog text-info"></i> Mark as Processing
+                                                    </a>
+                                                </li>
+                                            }
+                                            @if (order.Status == "Processing")
+                                            {
+                                                <li>
+                                                    <a class="dropdown-item" href="#" onclick="updateOrderStatus('@order.OrderId', 'Completed')">
+                                                        <i class="fas fa-check text-success"></i> Mark as Completed
+                                                    </a>
+                                                </li>
+                                            }
+                                            <li>
+                                                <a class="dropdown-item" href="#" onclick="updateOrderStatus('@order.OrderId', 'Cancelled')">
+                                                    <i class="fas fa-times text-danger"></i> Cancel Order
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                }
+
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('@order.OrderId', '@order.OrderId')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> No orders found.
+        <a asp-action="Create" class="alert-link">Create your first order</a>!
+    </div>
+}
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete order <strong id="orderId"></strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@{
+    string GetStatusBadgeClass(string status) => status?.ToLower() switch
+    {
+        "submitted" => "primary",
+        "processing" => "info",
+        "completed" => "success",
+        "cancelled" => "danger",
+        _ => "secondary"
+    };
+}
+
+@section Scripts {
+    <script>
+        function confirmDelete(orderId, orderIdDisplay) {
+            document.getElementById('orderId').textContent = orderIdDisplay.substring(0, 8) + '...';
+            document.getElementById('deleteForm').action = '/Order/Delete/' + orderId;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+
+        function updateOrderStatus(orderId, newStatus) {
+            if (confirm(`Are you sure you want to change the status to "${newStatus}"?`)) {
+                fetch('/Order/UpdateOrderStatus', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: orderId,
+                        newStatus: newStatus
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Status updated successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('An error occurred while updating the status');
+                });
+            }
+        }
+
+        function debugOrders() {
+            fetch('/Order/DebugOrders')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Order Debug Info:', data.orders);
+                        let debugText = 'Order Debug Information:\n\n';
+                        data.orders.forEach(order => {
+                            debugText += `Order ID: ${order.OrderId}\n`;
+                            debugText += `Product: ${order.ProductName}\n`;
+                            debugText += `Product ID: ${order.ProductId}\n`;
+                            debugText += `Current Product Price: $${order.ProductPrice}\n`;
+                            debugText += `Current Product Stock: ${order.ProductStock}\n`;
+                            debugText += `Order Unit Price: $${order.UnitPrice}\n`;
+                            debugText += `Order Total Price: $${order.TotalPrice}\n`;
+                            debugText += `Quantity: ${order.Quantity}\n`;
+                            debugText += `Status: ${order.Status}\n`;
+                            debugText += '---\n';
+                        });
+                        alert(debugText);
+                    } else {
+                        alert('Error getting debug info: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('An error occurred while getting debug info');
+                    console.error('Debug error:', error);
+                });
+        }
+    </script>
+}
+
+
+

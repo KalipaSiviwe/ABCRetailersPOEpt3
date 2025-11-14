@@ -1,0 +1,162 @@
+@model dynamic
+@{
+    ViewData["Title"] = "File Management";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-folder-open"></i> File Management</h2>
+</div>
+
+<!-- Upload Sections -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-image"></i> Upload Product Image</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="UploadImage" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="imageFile" class="form-label">Select Image File</label>
+                        <input type="file" class="form-control" id="imageFile" name="file" accept="image/*" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Upload Image
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-file-contract"></i> Upload Contract</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="UploadContract" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="contractFile" class="form-label">Select Contract File</label>
+                        <input type="file" class="form-control" id="contractFile" name="file" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-upload"></i> Upload Contract
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Images Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-images"></i> Product Images (@ViewBag.Images.Count)</h5>
+            </div>
+            <div class="card-body">
+                @if (ViewBag.Images != null && ViewBag.Images.Count > 0)
+                {
+                    <div class="row">
+                        @foreach (var image in ViewBag.Images)
+                        {
+                            <div class="col-md-3 mb-3">
+                                <div class="card">
+                                    <img src="@image.Url" class="card-img-top" alt="@image.Name" style="height: 200px; object-fit: cover;">
+                                    <div class="card-body">
+                                        <h6 class="card-title">@image.Name</h6>
+                                        <p class="card-text small">
+                                            Size: @(image.Size / 1024) KB<br>
+                                            Modified: @image.LastModified?.ToString("MMM dd, yyyy")
+                                        </p>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="@Url.Action("DownloadImage", new { fileName = image.Name })" 
+                                               class="btn btn-outline-primary" target="_blank">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                            <form asp-action="DeleteFile" method="post" style="display: inline;">
+                                                <input type="hidden" name="fileType" value="image">
+                                                <input type="hidden" name="fileName" value="@image.Name">
+                                                <button type="submit" class="btn btn-outline-danger" 
+                                                        onclick="return confirm('Are you sure you want to delete this image?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No product images found.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contracts Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-file-alt"></i> Contracts (@ViewBag.Contracts.Count)</h5>
+            </div>
+            <div class="card-body">
+                @if (ViewBag.Contracts != null && ViewBag.Contracts.Count > 0)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Size</th>
+                                    <th>Last Modified</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var contract in ViewBag.Contracts)
+                                {
+                                    <tr>
+                                        <td>@contract.Name</td>
+                                        <td>@(contract.Size / 1024) KB</td>
+                                        <td>@contract.LastModified?.ToString("MMM dd, yyyy HH:mm")</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="@Url.Action("DownloadContract", new { fileName = contract.Name })" 
+                                                   class="btn btn-outline-primary" target="_blank">
+                                                    <i class="fas fa-download"></i> Download
+                                                </a>
+                                                <form asp-action="DeleteFile" method="post" style="display: inline;">
+                                                    <input type="hidden" name="fileType" value="contract">
+                                                    <input type="hidden" name="fileName" value="@contract.Name">
+                                                    <button type="submit" class="btn btn-outline-danger" 
+                                                            onclick="return confirm('Are you sure you want to delete this contract?')">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No contracts found.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

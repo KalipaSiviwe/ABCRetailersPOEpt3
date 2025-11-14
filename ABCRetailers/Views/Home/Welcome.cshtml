@@ -1,0 +1,54 @@
+<!-- Views/Home/Welcome.cshtml -->
+@{
+    ViewData["Title"] = "Welcome";
+}
+
+<div class="text-center">
+    <div class="jumbotron bg-light p-5 rounded mb-5">
+        <h1 class="display-4 text-primary">
+            <i class="fas fa-store"></i> Welcome to ABC Retailers!
+        </h1>
+        <p class="lead">Your one-stop shop for the best deals and latest products</p>
+        <hr class="my-4">
+        <p>Please login or register to access our online store.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a asp-controller="Login" asp-action="Login" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </a>
+            <a asp-controller="Login" asp-action="Register" class="btn btn-success btn-lg">
+                <i class="fas fa-user-plus"></i> Register
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-shopping-cart fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Easy Shopping</h5>
+                    <p class="card-text">Browse our wide selection of products and add them to your cart with ease.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-shipping-fast fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Fast Delivery</h5>
+                    <p class="card-text">Quick and reliable shipping to get your orders to you as soon as possible.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Secure Shopping</h5>
+                    <p class="card-text">Your data and transactions are protected with industry-standard security.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,12 @@
+{
+    "profiles": {
+        "ABCRetailers.Functions": {
+            "commandName": "Project",
+            "commandLineArgs": "--host 127.0.0.1 --port 7115"
+        },
+        "WSL": {
+            "commandName": "WSL2",
+            "distributionName": ""
+        }
+    }
+}

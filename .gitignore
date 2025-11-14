@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+*.user
+appsettings.Production.json
+appsettings.Development.json
+*.pfx
+*.key
+appsettings.json
